@@ -2,7 +2,7 @@
 include_once("../IdC.php");
 include_once("../private/databasecon.php");
 
-class GetStedentripsApi {
+class UpdateStedentripsApi {
     protected $bearerToken = "";
     protected $bearerCredentials = "";
     protected $returnData = "";
@@ -30,42 +30,40 @@ class GetStedentripsApi {
 
     }
 
-    public function checkRooms() {
+    public function reserveRoom() {
         $Dbobj = new DbConnection(); 
-        $query = mysqli_query($Dbobj->getdbconnect(), "SELECT * FROM hotel_rooms");
+        $id = $_POST['id'];
+        $cancel = $_POST['cancel'];
 
-        return $query;
+        if ($cancel == 'false') {
+            $query = mysqli_query($Dbobj->getdbconnect(), "UPDATE hotel_rooms SET room_reserved = 'Y' WHERE id = $id");
+        } else {
+            $query = mysqli_query($Dbobj->getdbconnect(), "UPDATE hotel_rooms SET room_reserved = 'N' WHERE id = $id");
+        }
+
+        if(!$query){
+            return $query = print_r($query);
+        } else {
+            return $query = "Actie Geslaagd";
+        }
     }
 
     public function getService() {
-        try {
-            $this->geverifieerd = $this->checkToken();
-            $this->queryResult = $this->checkRooms();
+        $this->geverifieerd = $this->checkToken();
+        $this->queryResult = $this->reserveRoom();
 
-            if (!$this->geverifieerd) {
-                $this->returnData = array(
-                    "message" => "Error: Unauthorized Request.",
-                    "status" => "401",
-                    "bearerToken" => $this->bearerToken
-                );
-            } else {
-                if (mysqli_num_rows($this->queryResult) == 0){   
-                    $this->returnData = array(
-                        "message" => "Geen hotel kamers gevonden.",
-                        "status" => "200",
-                        "bearerToken" => $this->bearerToken
-                    );
-                }else{
-                    while($row = $this->queryResult->fetch_assoc()){
-                        $rows[] = $row;
-                        
-                        $this->returnData = $rows;
-                    }
-                }
-            }
-        } catch(Exception $e) {
-            $this->returnData = $e->getMessage();
-            die();
+        if (!$this->geverifieerd) {
+            $this->returnData = array(
+                "message" => "Error: Unauthorized Request.",
+                "status" => "401",
+                "bearerToken" => $this->bearerToken
+            );
+        } else {
+            $this->returnData = array(
+                "message" => $this->queryResult,
+                "status" => "200",
+                "bearerToken" => $this->bearerToken
+            );
         }
 
         header("HTTP/1.1" .  '200');
@@ -79,5 +77,5 @@ class GetStedentripsApi {
 }
 
 // execute service
-$api = new GetStedentripsApi();
+$api = new UpdateStedentripsApi();
 $api->getService();
