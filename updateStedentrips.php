@@ -1,23 +1,31 @@
 <?php
-include_once('IdP/IdP.php');
+include_once('IdP/IdPVerify.php');
 
-$username = "reisbureau ZIP";
+$username = "reisbureauzip";
 $password = "123";
 $credentials = array();
 $credentials['username'] = $username;
 $credentials['password'] = $password;
 $credentials['exp'] = time() + (60 * 60);
+$credentials['apiKey'] = 'nBuvrpSH5cGtpKQyd5EDLAJbZdouwNmiEhQ34L5e';
+$credentials['methode'] = ['GET', 'POST'];
 
-$idp = new IdP($credentials);
-$token = $idp->getToken();
+$idp = new IdPVerify($credentials);
 
+try {
+    $token = $idp->getVerifiedToken();
+} catch (Exception $e) {
+    echo 'Error!: ' .$e->getMessage();
+}
+
+if (isset($token)) {
 $APIurl = "http://localhost/reisbureau/IdP/microservices/UpdateStedentripsApi.php";
 
 $ch = curl_init($APIurl);
 $curl_post_data = array(
-    'apiKey' => '1234567890',
-    'username' => $username,
-    'password' => $password,
+    'apiKey' => $credentials['apiKey'],
+    'username' => $credentials['username'],
+    'password' => $credentials['password'],
     'id' => $_GET['id'],
     'cancel' => $_GET['cancel'],
 );
@@ -43,5 +51,6 @@ echo "<br>" . $decoded['message'];
 echo "<br> <a href='../getStedentrips.php'>Ga naar stedentrips</a>";
 
 curl_close($ch);
+}
 
 // print_r($decoded);

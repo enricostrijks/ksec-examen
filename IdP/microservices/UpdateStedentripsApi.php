@@ -42,7 +42,7 @@ class UpdateStedentripsApi {
         }
 
         if(!$query){
-            return $query = print_r($query);
+            return $query = "Er is iets misgegaan, probeer het later opnieuw!";
         } else {
             return $query = "Actie Geslaagd";
         }

@@ -1,24 +1,31 @@
 <?php
-include_once('IdP/IdP.php');
+include_once('IdP/IdPVerify.php');
 
-$username = "reisbureau ZIP";
+$username = "reisbureauzip";
 $password = "123";
 $credentials = array();
 $credentials['username'] = $username;
 $credentials['password'] = $password;
 $credentials['exp'] = time() + (60 * 60);
-$credentials['apiKey'] = '12345';
+$credentials['apiKey'] = 'nBuvrpSH5cGtpKQyd5EDLAJbZdouwNmiEhQ34L5e';
+$credentials['methode'] = ['GET', 'POST'];
 
-$idp = new IdP($credentials);
-$token = $idp->getToken();
+$idp = new IdPVerify($credentials);
 
+try {
+   $token = $idp->getVerifiedToken();
+} catch (Exception $e) {
+    echo 'Error!: ' .$e->getMessage();
+}
+
+if (isset($token)) {
 $APIurl = "http://localhost/reisbureau/IdP/microservices/GetStedentripsApi.php";
 
 $ch = curl_init($APIurl);
 $curl_post_data = array(
-    'apiKey' => '1234567890',
-    'username' => $username,
-    'password' => $password
+    'apiKey' => $credentials['apiKey'],
+    'username' => $credentials['username'],
+    'password' => $credentials['password']
 );
 
 curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
@@ -43,6 +50,7 @@ $decoded = json_decode($response, true);
 // echo "<br>Bearer token: " . $decoded['bearerToken'];
 
 curl_close($ch);
+}
 
 $imgpath = "./public/room_img/";
 $updatePath = "./updateStedentrips.php/?cancel=false&id=";
@@ -63,6 +71,8 @@ $euro = "€"
     <section class="archive">
         <div class="items">
             <?php 
+            if(isset($token)) {
+            if (isset($decoded)) {
             foreach($decoded as $decode) {?>
                     <div class="item">
                         <div class="item-out">
@@ -109,7 +119,11 @@ $euro = "€"
                             </div>
                         </div>
                     </div>
-            <?php } ?>
+            <?php }
+            } else {
+                echo "Er is iets misgegaan probeert het later opnieuw!";
+            }
+         } ?>
         </div>
     </section>
 </body>
