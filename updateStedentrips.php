@@ -8,7 +8,7 @@ $credentials['username'] = $username;
 $credentials['password'] = $password;
 $credentials['exp'] = time() + (60 * 60);
 $credentials['apiKey'] = 'nBuvrpSH5cGtpKQyd5EDLAJbZdouwNmiEhQ34L5e';
-$credentials['methode'] = ['GET', 'POST'];
+$credentials['methode'] = ['GET', 'POST', 'PUT'];
 
 $idp = new IdPVerify($credentials);
 

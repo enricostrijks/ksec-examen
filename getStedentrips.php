@@ -8,7 +8,7 @@ $credentials['username'] = $username;
 $credentials['password'] = $password;
 $credentials['exp'] = time() + (60 * 60);
 $credentials['apiKey'] = 'nBuvrpSH5cGtpKQyd5EDLAJbZdouwNmiEhQ34L5e';
-$credentials['methode'] = ['GET', 'POST'];
+$credentials['methode'] = ['GET', 'POST', 'PUT'];
 
 $idp = new IdPVerify($credentials);
 
@@ -28,16 +28,22 @@ $curl_post_data = array(
     'password' => $credentials['password']
 );
 
+$headers = [
+    'Accept: application/json; charset=UTF-8',
+    "Authorization: Bearer " . $token,
+    'Format:json'
+];
+
 curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
 curl_setopt($ch, CURLOPT_USERPWD, "$username:$password");
-curl_setopt($ch, CURLOPT_HTTPHEADER, array("Authorization: Bearer " . $token));
+curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 curl_setopt($ch, CURLOPT_POSTFIELDS, $curl_post_data);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
 $response = curl_exec($ch);
 $resultStatus = curl_getinfo($ch);
 
-// print_r($response);
+print_r($response);
 // print_r($resultStatus);
 
 $decoded = json_decode($response, true);

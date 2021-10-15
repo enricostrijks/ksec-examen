@@ -19,32 +19,46 @@ class IdPVerify extends JWT {
     public function checkMethod() {
         $currentRequestMethod = $_SERVER['REQUEST_METHOD'];
 
-        $allowedRequestMethods = array('GET', 'POST');
+        $allowedRequestMethods = $this->bearerCredentials['methode'];
 
         if(!in_array($currentRequestMethod, $allowedRequestMethods)){
+            $this->logAuditLog("Post method invalid (returned 405)");
             header($_SERVER["SERVER_PROTOCOL"]." 405 Method Not Allowed", true, 405);
             exit;
         }
     }
-    public function getVerifiedToken() {
-        $userMessages = array(
-            'HTTP Method not allowed.',
-            'API Key not valid.'
-        );
+    public function logAuditLog($evenement = null) {
+        $Dbobj = new DbConnection(); 
 
+        $ip = $_SERVER['REMOTE_ADDR'];
+        if(is_null($this->bearerCredentials['username'])) {
+            $gebruiker = "unknown";
+        } else {
+            $gebruiker = $this->bearerCredentials['username'];
+        }
+        $event = $evenement;
+
+        $query = mysqli_query($Dbobj->getdbconnect(), "INSERT INTO auditlogs (ip, gebruiker, evenement) VALUES ('". $ip ."', '". $gebruiker ."', '". $event ."')");
+    }
+
+    public function getVerifiedToken() {
         $this->queryResult = $this->checkApiKey();
         $this->whitelistMethod = $this->checkMethod();
 
         if ($this->whitelistMethod) {
+            $this->logAuditLog("Post method invalid (did not return 405)");
             throw new Exception("HTTP Method is not valid.");
         }
 
-        if (mysqli_num_rows($this->queryResult) == 0){   
+        if (mysqli_num_rows($this->queryResult) == 0){
+            $this->logAuditLog("Login failed");   
             throw new Exception("Username or Password or API Key is not valid.");
         }
 
         $idp = new IdP($this->bearerCredentials);
         $token = $idp->getToken();
+        $this->logAuditLog("Login succesvol");
+
         return $token;  
     }
 }
