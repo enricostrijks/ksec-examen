@@ -43,7 +43,7 @@ curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 $response = curl_exec($ch);
 $resultStatus = curl_getinfo($ch);
 
-print_r($response);
+// print_r($response);
 // print_r($resultStatus);
 
 $decoded = json_decode($response, true);

@@ -30,9 +30,15 @@ $curl_post_data = array(
     'cancel' => $_GET['cancel'],
 );
 
+$headers = [
+    'Accept: application/json; charset=UTF-8',
+    "Authorization: Bearer " . $token,
+    'Format:json'
+];
+
 curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
 curl_setopt($ch, CURLOPT_USERPWD, "$username:$password");
-curl_setopt($ch, CURLOPT_HTTPHEADER, array("Authorization: Bearer " . $token));
+curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 curl_setopt($ch, CURLOPT_POSTFIELDS, $curl_post_data);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
