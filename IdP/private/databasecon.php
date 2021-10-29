@@ -2,6 +2,10 @@
 
 Class DbConnection{
     function getdbconnect(){
+        if(!isset($_SESSION)) 
+        { 
+            session_start(); 
+        } 
         $conn = mysqli_connect("localhost", "root", "", "reisbureau") or die("Couldn't connect");
         
         $data = 
@@ -27,4 +31,4 @@ Class DbConnection{
 
         return $conn;
     }
-} ?>
+}

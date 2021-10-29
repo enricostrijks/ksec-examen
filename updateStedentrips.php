@@ -1,13 +1,17 @@
 <?php
+if(!isset($_SESSION)) 
+{ 
+    session_start(); 
+} 
 include_once('IdP/IdPVerify.php');
 
-$username = "reisbureauzip";
-$password = "123";
+$username = $_SESSION['username'];
+$password = $_SESSION['password'];
 $credentials = array();
 $credentials['username'] = $username;
 $credentials['password'] = $password;
 $credentials['exp'] = time() + (60 * 60);
-$credentials['apiKey'] = 'nBuvrpSH5cGtpKQyd5EDLAJbZdouwNmiEhQ34L5e';
+$credentials['apiKey'] = $_SESSION['apiKey'];
 $credentials['methode'] = ['GET', 'POST', 'PUT'];
 
 $idp = new IdPVerify($credentials);

@@ -30,18 +30,38 @@ class UpdateStedentripsApi {
 
     }
 
+    public function logAuditLog($evenement = null) {
+        $Dbobj = new DbConnection();
+        $mysqli = $Dbobj->getdbconnect();
+        $stmt = $mysqli->prepare("INSERT INTO auditlogs (ip, gebruiker, evenement) VALUES (?,?,?)");
+        $stmt->bind_param("sss", $ip, $gebruiker, $event);
+
+        $ip = $_SERVER['REMOTE_ADDR'];
+        if(is_null($this->bearerCredentials['username'])) {
+            $gebruiker = "unknown";
+        } else {
+            $gebruiker = $this->bearerCredentials['username'];
+        }
+        $event = $evenement;
+        
+        $stmt->execute();
+    }
+
     public function reserveRoom() {
         $Dbobj = new DbConnection(); 
         $id = $_POST['id'];
         $cancel = $_POST['cancel'];
 
         if ($cancel == 'false') {
+            $this->logAuditLog("Hotel kamer gereserveerd");
             $query = mysqli_query($Dbobj->getdbconnect(), "UPDATE hotel_rooms SET room_reserved = 'Y' WHERE id = $id");
         } else {
+            $this->logAuditLog("Hotel kamer geannuleerd");
             $query = mysqli_query($Dbobj->getdbconnect(), "UPDATE hotel_rooms SET room_reserved = 'N' WHERE id = $id");
         }
 
         if(!$query){
+            $this->logAuditLog("Hotel kamer reservering mislukt");
             return $query = "Er is iets misgegaan, probeer het later opnieuw!";
         } else {
             return $query = "Actie Geslaagd";

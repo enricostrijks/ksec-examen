@@ -1,13 +1,18 @@
 <?php
+if(!isset($_SESSION)) 
+{ 
+    session_start(); 
+} 
 include_once('IdP/IdPVerify.php');
+include_once('IdP/private/User.php');
 
-$username = "reisbureauzip";
-$password = "123";
+$username = $_SESSION['username'];
+$password = $_SESSION['password'];
 $credentials = array();
 $credentials['username'] = $username;
 $credentials['password'] = $password;
 $credentials['exp'] = time() + (60 * 60);
-$credentials['apiKey'] = 'nBuvrpSH5cGtpKQyd5EDLAJbZdouwNmiEhQ34L5e';
+$credentials['apiKey'] = $_SESSION['apiKey'];
 $credentials['methode'] = ['GET', 'POST', 'PUT'];
 
 $idp = new IdPVerify($credentials);
@@ -61,7 +66,10 @@ curl_close($ch);
 $imgpath = "./public/room_img/";
 $updatePath = "./updateStedentrips.php/?cancel=false&id=";
 $updatePathCancel = "./updateStedentrips.php/?cancel=true&id=";
-$euro = "€"
+$euro = "€";
+
+// $user = new User();
+// $admin = $user->checkAdmin();
 ?>
 
 <!DOCTYPE html>
@@ -74,6 +82,9 @@ $euro = "€"
     <title>Hotel kamers</title>
 </head>
 <body>
+    <div class="logout">
+        <?php if ($_SESSION['role'] === 'admin') {?><a class="button mr-2" href='public/admin/dashboard.php'>Dashboard</a><?php } ?>
+        <a class="button" href='public/?logout'>Log uit</a></div>
     <section class="archive">
         <div class="items">
             <?php 

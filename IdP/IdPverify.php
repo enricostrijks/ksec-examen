@@ -28,7 +28,10 @@ class IdPVerify extends JWT {
         }
     }
     public function logAuditLog($evenement = null) {
-        $Dbobj = new DbConnection(); 
+        $Dbobj = new DbConnection();
+        $mysqli = $Dbobj->getdbconnect();
+        $stmt = $mysqli->prepare("INSERT INTO auditlogs (ip, gebruiker, evenement) VALUES (?,?,?)");
+        $stmt->bind_param("sss", $ip, $gebruiker, $event);
 
         $ip = $_SERVER['REMOTE_ADDR'];
         if(is_null($this->bearerCredentials['username'])) {
@@ -37,8 +40,8 @@ class IdPVerify extends JWT {
             $gebruiker = $this->bearerCredentials['username'];
         }
         $event = $evenement;
-
-        $query = mysqli_query($Dbobj->getdbconnect(), "INSERT INTO auditlogs (ip, gebruiker, evenement) VALUES ('". $ip ."', '". $gebruiker ."', '". $event ."')");
+        
+        $stmt->execute();
     }
 
     public function getVerifiedToken() {
