@@ -110,12 +110,20 @@ body h2 {
   margin-right: 1.5rem !important;
 }
 
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 .logout {
   margin: 2rem 1rem 2rem 0 !important;
   position: relative;
-  display: flex;
-  justify-content: end;
-  align-items: flex-end;
+}
+
+.home {
+  margin: 2rem 0 2rem 0 !important;
+  position: relative;
 }
 
 .button {

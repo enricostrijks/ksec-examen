@@ -95,46 +95,79 @@ class User
 
         $stmt->execute();
     }
+
+    public function getUserInformation($idParam = null) {
+        $Dbobj = new DbConnection();
+        $mysqli = $Dbobj->getdbconnect();
+        $stmt = $mysqli->prepare("SELECT * FROM users WHERE id = ?");
+        $stmt->bind_param("i", $id);
+
+        $id = $idParam;
+
+        $stmt->execute();
+
+        $userInfo = $stmt->get_result();
+
+        $row = $userInfo->fetch_assoc();
+
+        return $row;
+    }
     
 
-    public function approveUser()
+    public function approveUser($idParam = null)
     {
+        $this->userInfo = $this->getUserInformation($idParam);
         $Dbobj = new DbConnection();
         $mysqli = $Dbobj->getdbconnect();
-        $stmt = $mysqli->prepare("INSERT INTO users (ip, gebruiker, evenement) VALUES (?,?,?)");
-        $stmt->bind_param("sss", $ip, $gebruiker, $event);
+        $stmt = $mysqli->prepare("UPDATE users SET is_allowed = ?, apiKey = ? WHERE id = ?");
+        $stmt->bind_param("isi", $approved, $apiKey, $id);
+
+        $approved = 1;
+        $apiKey = implode('-', str_split(substr(strtolower(md5(microtime().rand(1000, 9999))), 0, 30), 6));
+        $id = $idParam;
+
+        $stmt->execute();
+
+        $to_email = $this->userInfo['email'];
+        $subject = 'Hotel Rooms Approved your API request!';
+        $message = 'Your request for an api key is approved! Your API key =' . $apiKey;
+        $headers = 'From: noreply@hotelrooms.com';
+        mail($to_email,$subject,$message,$headers);
     }
 
-    public function denyUser()
+    public function denyUser($idParam = null)
     {
+        $this->userInfo = $this->getUserInformation($idParam);
         $Dbobj = new DbConnection();
         $mysqli = $Dbobj->getdbconnect();
-        $stmt = $mysqli->prepare("INSERT INTO users (ip, gebruiker, evenement) VALUES (?,?,?)");
-        $stmt->bind_param("sss", $ip, $gebruiker, $event);
+        $stmt = $mysqli->prepare("UPDATE users SET is_allowed = ? WHERE id = ?");
+        $stmt->bind_param("ii", $denied, $id);
+
+        $denied = 0;
+        $id = $idParam;
+
+        $stmt->execute();
+
+        $to_email = $this->userInfo['email'];
+        $subject = 'Hotel Rooms Denied your API request!';
+        $message = 'Your request for an api key is denied. Try again later!';
+        $headers = 'From: noreply@hotelrooms.com';
+        mail($to_email,$subject,$message,$headers);
     }
 
-    // public function checkAdmin()
-    // {
-    //     $Dbobj = new DbConnection();
-    //     $mysqli = $Dbobj->getdbconnect();
-    //     $stmt = $mysqli->prepare("SELECT is_admin FROM users WHERE username = ?");
-    //     $stmt->bind_param("s", $username);
+    public function selectAppliedUsers() {
+        $Dbobj = new DbConnection();
+        $mysqli = $Dbobj->getdbconnect();
+        $stmt = $mysqli->prepare("SELECT * FROM users WHERE is_allowed = ?");
+        $stmt->bind_param("i", $is_allowed);
 
-    //     $username = $_SESSION['username'];
+        $is_allowed = 0;
+        $stmt->execute();
 
-    //     $stmt->execute();
-        
-    //     $query = $stmt->get_result();
-    //     $row = $query->fetch_assoc();
+        $selectAppliedUsers = $stmt->get_result();
 
-    //     if($row['is_admin'] == 1) {
-    //         $admin = 0;
-    //     } else {
-    //         $admin = 1;
-    //     }
-
-    //     return $admin;
-    // }
+        return $selectAppliedUsers;
+    }
 
     public function Logout()
     {
