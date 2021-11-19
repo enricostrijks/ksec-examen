@@ -32,7 +32,7 @@ class User
         $stmt = $mysqli->prepare("SELECT * FROM users WHERE username = ?");
         $stmt->bind_param("s", $username);
 
-        $username = $_POST['username'];
+        $username = htmlspecialchars($_POST['username']);
 
         // $username = 'reisbureauzip';
         // $password = '123';
@@ -56,18 +56,18 @@ class User
         $row = $query->fetch_assoc();
         $password = $_POST['password'];
 
-        if(!password_verify($password, $row['password'])) {
+        if (!password_verify($password, $row['password'])) {
             $this->logAuditLog("Login form wrong password");
             throw new Exception("Password is wrong.");
         }
 
-        if($row['is_allowed'] == 0) {
+        if ($row['is_allowed'] == 0) {
             $this->logAuditLog("Login without access granted");
             throw new Exception("Account is not granted yet.");
         }
 
         $_SESSION['logged_in'] = true;
-        $_SESSION['username'] = $_POST['username'];
+        $_SESSION['username'] = htmlspecialchars($_POST['username']);
         $_SESSION['password'] = $row['password'];
         $_SESSION['email'] = $_POST['email'];
         $_SESSION['apiKey'] = $row['apiKey'];
@@ -79,24 +79,30 @@ class User
         $Dbobj = new DbConnection();
         $mysqli = $Dbobj->getdbconnect();
         $stmt = $mysqli->prepare("INSERT INTO users (username, email, password) VALUES (?,?,?)");
-        $stmt->bind_param("sss", $username, $email, $password );
+        if (!$stmt) {
+            $this->logAuditLog("Failed to register user");
+            throw new Exception("Failed to register user");
+        }
+        $stmt->bind_param("sss", $username, $email, $password);
 
-        $username = $_POST['username'];
-        $email = $_POST['email'];
+        $username = htmlspecialchars($_POST['username']);
+        $email = htmlspecialchars($_POST['email']);
         $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
 
-        if (empty($_POST['username']) || empty($_POST['email']) || empty($_POST['password'])){
+        if (empty($_POST['username']) || empty($_POST['email']) || empty($_POST['password'])) {
             throw new Exception('Please fill all fields');
         }
-        
+
         // if (!$stmt->execute()) {
         //    throw new Exception('error executing statement: ' . $stmt->error);
         // }
 
         $stmt->execute();
+        $this->logAuditLog("Succesfully registered user.");
     }
 
-    public function getUserInformation($idParam = null) {
+    public function getUserInformation($idParam = null)
+    {
         $Dbobj = new DbConnection();
         $mysqli = $Dbobj->getdbconnect();
         $stmt = $mysqli->prepare("SELECT * FROM users WHERE id = ?");
@@ -112,7 +118,7 @@ class User
 
         return $row;
     }
-    
+
 
     public function approveUser($idParam = null)
     {
@@ -120,19 +126,25 @@ class User
         $Dbobj = new DbConnection();
         $mysqli = $Dbobj->getdbconnect();
         $stmt = $mysqli->prepare("UPDATE users SET is_allowed = ?, apiKey = ? WHERE id = ?");
+        if (!$stmt) {
+            $this->logAuditLog("Failed to approve user with ID: " . $idParam);
+            throw new Exception("Failed to approve user with ID: " . $idParam);
+        }
         $stmt->bind_param("isi", $approved, $apiKey, $id);
 
         $approved = 1;
-        $apiKey = implode('-', str_split(substr(strtolower(md5(microtime().rand(1000, 9999))), 0, 30), 6));
+        $apiKey = implode('-', str_split(substr(strtolower(md5(microtime() . rand(1000, 9999))), 0, 30), 6));
         $id = $idParam;
 
         $stmt->execute();
 
+        $this->logAuditLog("Approved api key request user with ID: " . $idParam);
+
         $to_email = $this->userInfo['email'];
         $subject = 'Hotel Rooms Approved your API request!';
-        $message = 'Your request for an api key is approved! Your API key =' . $apiKey;
+        $message = 'Your request for an api key is approved! Your API key = ' . $apiKey;
         $headers = 'From: noreply@hotelrooms.com';
-        mail($to_email,$subject,$message,$headers);
+        mail($to_email, $subject, $message, $headers);
     }
 
     public function denyUser($idParam = null)
@@ -141,21 +153,48 @@ class User
         $Dbobj = new DbConnection();
         $mysqli = $Dbobj->getdbconnect();
         $stmt = $mysqli->prepare("UPDATE users SET is_allowed = ? WHERE id = ?");
+        if (!$stmt) {
+            $this->logAuditLog("Failed to deny user with ID: " . $idParam);
+            throw new Exception("Failed to deny user with ID: " . $idParam);
+        }
         $stmt->bind_param("ii", $denied, $id);
 
-        $denied = 0;
+        $denied = 2;
         $id = $idParam;
 
         $stmt->execute();
+
+        $this->logAuditLog("Denied api key request user with ID: " . $idParam);
 
         $to_email = $this->userInfo['email'];
         $subject = 'Hotel Rooms Denied your API request!';
         $message = 'Your request for an api key is denied. Try again later!';
         $headers = 'From: noreply@hotelrooms.com';
-        mail($to_email,$subject,$message,$headers);
+        mail($to_email, $subject, $message, $headers);
     }
 
-    public function selectAppliedUsers() {
+    public function revokeKeyUser($idParam = null)
+    {
+        $this->userInfo = $this->getUserInformation($idParam);
+        $Dbobj = new DbConnection();
+        $mysqli = $Dbobj->getdbconnect();
+        $stmt = $mysqli->prepare("UPDATE users SET apiKey = ?, is_allowed = ? WHERE id = ?");
+        if (!$stmt) {
+            $this->logAuditLog("Failed to revoke key of user with ID: " . $idParam);
+            throw new Exception("Failed to revoke key of user with ID: " . $idParam);
+        }
+        $stmt->bind_param("iii", $apiKey, $denied, $id);
+
+        $apiKey = NULL;
+        $denied = 2;
+        $id = $idParam;
+
+        $stmt->execute();
+        $this->logAuditLog("Succesfully revoked key of user with ID: " . $idParam);
+    }
+
+    public function selectAppliedUsers()
+    {
         $Dbobj = new DbConnection();
         $mysqli = $Dbobj->getdbconnect();
         $stmt = $mysqli->prepare("SELECT * FROM users WHERE is_allowed = ?");
@@ -167,6 +206,36 @@ class User
         $selectAppliedUsers = $stmt->get_result();
 
         return $selectAppliedUsers;
+    }
+
+    public function selectApprovedUsers()
+    {
+        $Dbobj = new DbConnection();
+        $mysqli = $Dbobj->getdbconnect();
+        $stmt = $mysqli->prepare("SELECT * FROM users WHERE is_allowed = ?");
+        $stmt->bind_param("i", $is_allowed);
+
+        $is_allowed = 1;
+        $stmt->execute();
+
+        $selectAppliedUsers = $stmt->get_result();
+
+        return $selectAppliedUsers;
+    }
+
+    public function selectDeniedUsers()
+    {
+        $Dbobj = new DbConnection();
+        $mysqli = $Dbobj->getdbconnect();
+        $stmt = $mysqli->prepare("SELECT * FROM users WHERE is_allowed = ?");
+        $stmt->bind_param("i", $is_allowed);
+
+        $is_allowed = 2;
+        $stmt->execute();
+
+        $selectDeniedUsers = $stmt->get_result();
+
+        return $selectDeniedUsers;
     }
 
     public function Logout()

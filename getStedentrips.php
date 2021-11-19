@@ -85,7 +85,7 @@ $euro = "€";
 <body>
     <div class="header">
         <div class="home">
-            <a class="button mr-2" href='../../getStedentrips.php'>Home page</a>
+            <a class="button mr-2" href=''>Home page</a>
         </div>
         <div class="logout">
             <?php if ($_SESSION['role'] === 'admin') { ?><a class="button mr-2" href='public/admin/dashboard.php'>Dashboard</a><?php } ?>

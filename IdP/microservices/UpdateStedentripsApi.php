@@ -2,17 +2,19 @@
 include_once("../IdC.php");
 include_once("../private/databasecon.php");
 
-class UpdateStedentripsApi {
+class UpdateStedentripsApi
+{
     protected $bearerToken = "";
     protected $bearerCredentials = "";
     protected $returnData = "";
     protected $geverifieerd = "";
 
-    public function __construct() {
-
+    public function __construct()
+    {
     }
 
-    public function checkToken() {
+    public function checkToken()
+    {
         $username = htmlspecialchars($_POST['username']);
         $password = htmlspecialchars($_POST['password']);
 
@@ -27,40 +29,55 @@ class UpdateStedentripsApi {
 
         $idc = new IdC($this->bearerToken, $this->bearerCredentials);
         return $idc->decodeToken();
-
     }
 
-    public function logAuditLog($evenement = null) {
+    public function logAuditLog($evenement = null)
+    {
         $Dbobj = new DbConnection();
         $mysqli = $Dbobj->getdbconnect();
         $stmt = $mysqli->prepare("INSERT INTO auditlogs (ip, gebruiker, evenement) VALUES (?,?,?)");
         $stmt->bind_param("sss", $ip, $gebruiker, $event);
 
         $ip = $_SERVER['REMOTE_ADDR'];
-        if(is_null($this->bearerCredentials['username'])) {
+        if (is_null($this->bearerCredentials['username'])) {
             $gebruiker = "unknown";
         } else {
             $gebruiker = $this->bearerCredentials['username'];
         }
         $event = $evenement;
-        
+
         $stmt->execute();
     }
 
-    public function reserveRoom() {
-        $Dbobj = new DbConnection(); 
+    public function reserveRoom()
+    {
+        $Dbobj = new DbConnection();
         $id = $_POST['id'];
         $cancel = $_POST['cancel'];
 
+        $mysqli = $Dbobj->getdbconnect();
+
         if ($cancel == 'false') {
             $this->logAuditLog("Hotel kamer gereserveerd");
-            $query = mysqli_query($Dbobj->getdbconnect(), "UPDATE hotel_rooms SET room_reserved = 'Y' WHERE id = $id");
+            $stmt = $mysqli->prepare("UPDATE hotel_rooms SET room_reserved = ? WHERE id = ?");
+            $stmt->bind_param("si", $roomReserve, $idUser);
+
+            $roomReserve = "Y";
+            $idUser = $id;
+
+            $stmt->execute();
         } else {
             $this->logAuditLog("Hotel kamer geannuleerd");
-            $query = mysqli_query($Dbobj->getdbconnect(), "UPDATE hotel_rooms SET room_reserved = 'N' WHERE id = $id");
+            $stmt = $mysqli->prepare("UPDATE hotel_rooms SET room_reserved = ? WHERE id = ?");
+            $stmt->bind_param("si", $roomReserve, $idUser);
+
+            $roomReserve = "Y";
+            $idUser = $id;
+
+            $stmt->execute();
         }
 
-        if(!$query){
+        if (!$stmt) {
             $this->logAuditLog("Hotel kamer reservering mislukt");
             return $query = "Er is iets misgegaan, probeer het later opnieuw!";
         } else {
@@ -68,7 +85,8 @@ class UpdateStedentripsApi {
         }
     }
 
-    public function getService() {
+    public function getService()
+    {
         $this->geverifieerd = $this->checkToken();
         $this->queryResult = $this->reserveRoom();
 
