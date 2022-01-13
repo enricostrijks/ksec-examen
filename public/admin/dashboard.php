@@ -1,5 +1,5 @@
 <?php
-include_once('../../IdP/private/User.php');
+include_once('../../private/database/User.php');
 
 if (!isset($_SESSION)) {
     session_start();

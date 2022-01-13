@@ -1,5 +1,5 @@
 <?php
-include_once('../IdP/private/User.php');
+include_once('../private/database/User.php');
 
 if (isset($_GET['logout'])) {
     $logout = new User();
@@ -22,7 +22,7 @@ if (isset($_GET['logout'])) {
 <body>
     <h2>Kies een service</h2>
     <a href='../getStedentrips.php'>Stedentrips</a>
-    
+
     <br>
     <br>
     <a href='?logout'>Log uit</a>

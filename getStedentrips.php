@@ -2,8 +2,8 @@
 if (!isset($_SESSION)) {
     session_start();
 }
-include_once('IdP/IdPVerify.php');
-include_once('IdP/private/User.php');
+include_once('private/IdPVerify.php');
+include_once('private/database/User.php');
 
 $username = $_SESSION['username'];
 $password = $_SESSION['password'];
@@ -23,7 +23,7 @@ try {
 }
 
 if (isset($token)) {
-    $APIurl = "http://localhost/reisbureau/IdP/microservices/GetStedentripsApi.php";
+    $APIurl = "http://localhost/reisbureau/private/microservices/GetStedentripsApi.php";
 
     $ch = curl_init($APIurl);
     $curl_post_data = array(
